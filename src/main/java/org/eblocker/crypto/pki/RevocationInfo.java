@@ -18,6 +18,7 @@ package org.eblocker.crypto.pki;
 
 import java.math.BigInteger;
 import java.util.Date;
+import java.util.Objects;
 
 public class RevocationInfo {
 
@@ -43,5 +44,24 @@ public class RevocationInfo {
 
     public RevocationReason getRevocationReason() {
         return revocationReason;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(serialNumber, revocationDate, revocationReason);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof RevocationInfo) {
+            RevocationInfo other = (RevocationInfo) obj;
+            return Objects.equals(this.serialNumber, other.serialNumber)
+                    && Objects.equals(this.revocationDate, other.revocationDate)
+                    && Objects.equals(this.revocationReason, other.revocationReason);
+        }
+        return false;
     }
 }

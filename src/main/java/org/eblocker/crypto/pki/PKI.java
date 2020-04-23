@@ -94,11 +94,13 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.cert.CRLException;
+import java.security.cert.CRLReason;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509CRL;
+import java.security.cert.X509CRLEntry;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -106,7 +108,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class PKI {
     private static final Logger log = LoggerFactory.getLogger(PKI.class);
@@ -554,6 +558,25 @@ public class PKI {
         }
     }
 
+    public static X509CRL loadCrl(InputStream in) throws IOException, CryptoException {
+        try (PEMParser pemParser = new PEMParser(new InputStreamReader(in))) {
+            Object object = pemParser.readObject();
+            if (object instanceof  X509CRLHolder) {
+                try {
+                    return new JcaX509CRLConverter().setProvider(CERTIF_PROVIDER_NAME).getCRL((X509CRLHolder)object);
+                } catch (CRLException e) {
+                    String msg = "could not convert parsed CRL";
+                    log.error(msg, e);
+                    throw new CryptoException(msg, e);
+                }
+            } else {
+                String msg = "unexpected pem content: " + object.getClass();
+                log.error(msg);
+                throw new CryptoException(msg);
+            }
+        }
+    }
+
     public static void storeCertificate(X509Certificate certificate, OutputStream os) throws IOException, CryptoException {
         try {
             writeToPEM("CERTIFICATE", certificate.getEncoded(), os);
@@ -707,4 +730,32 @@ public class PKI {
         return SubjectKeyIdentifier.getInstance(akiOctetString.getOctets()).getKeyIdentifier();
     }
 
+    public static Set<RevocationInfo> getRevocationInfoEntries(X509CRL crl) {
+        Set<? extends X509CRLEntry> entries = crl.getRevokedCertificates();
+        if (entries == null) {
+            return Collections.emptySet();
+        }
+        return entries.stream()
+                .map(PKI::getRevocationInfo)
+                .collect(Collectors.toSet());
+    }
+
+    private static RevocationInfo getRevocationInfo(X509CRLEntry x509CRLEntry) {
+        BigInteger serial = x509CRLEntry.getSerialNumber();
+        Date date = x509CRLEntry.getRevocationDate();
+        RevocationReason reason = getRevocationReason(x509CRLEntry.getRevocationReason());
+        return new RevocationInfo(serial, date, reason);
+    }
+
+    private static RevocationReason getRevocationReason(CRLReason reason) {
+        if (reason == null) {
+            return null;
+        }
+        switch (reason) {
+            case CESSATION_OF_OPERATION: return RevocationReason.DEACTIVATED;
+            case PRIVILEGE_WITHDRAWN:    return RevocationReason.REVOKED;
+            case SUPERSEDED:             return RevocationReason.REPLACED;
+            default:                     return null;
+        }
+    }
 }
