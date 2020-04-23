@@ -36,11 +36,8 @@ import java.math.BigInteger;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.PrivateKey;
-import java.security.cert.CRLReason;
-import java.security.cert.CertificateFactory;
-import java.security.cert.CertificateParsingException;
-import java.security.cert.X509CRL;
-import java.security.cert.X509Certificate;
+import java.security.cert.*;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -323,6 +320,15 @@ public class PKITest {
         Assert.assertEquals("RSA", key.getAlgorithm());
         Assert.assertEquals("PKCS#8", key.getFormat());
         Assert.assertEquals("8DF4E4DF1D3BEAD11AEA951E241A17D0EFC5D408C5C944B9BB072CD1ACEBC9DD", DatatypeConverter.printHexBinary(MessageDigest.getInstance("SHA-256").digest(key.getEncoded())));
+    }
+
+    @Test
+    public void testLoadCrl() throws Exception {
+        X509CRL crl = PKI.loadCrl(ClassLoader.getSystemResourceAsStream("crl.pem"));
+        Assert.assertNotNull(crl);
+        Set<RevocationInfo> entries = PKI.getRevocationInfoEntries(crl);
+        Assert.assertEquals(1, entries.size());
+        Assert.assertTrue(entries.contains(new RevocationInfo(BigInteger.valueOf(5), Date.from(Instant.parse("2020-04-15T11:01:58Z")), null)));
     }
 
     @Test
