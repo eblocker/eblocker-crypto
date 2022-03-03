@@ -71,6 +71,18 @@ public class CryptoServiceTest {
                 });
     }
 
+    @Test
+    public void testSaltedPassword() throws Exception {
+        byte[] data = new byte[1234];
+        random.nextBytes(data);
+        char[] password = "top secret password".toCharArray();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        CryptoService service = CryptoServiceFactory.getInstance().setSaltedPassword(password, salt).build();
+        EncryptedData encrypted = service.encrypt(data);
+        assertArrayEquals(data, service.decrypt(encrypted));
+    }
+
     private CryptoService getCryptoService() throws CryptoException {
         return CryptoServiceFactory.getInstance().setKey(Arrays.copyOf(defaultMasterKey, defaultMasterKey.length)).build();
     }
