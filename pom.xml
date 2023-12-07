@@ -3,8 +3,7 @@
     <parent>
         <artifactId>eblocker-top</artifactId>
         <groupId>org.eblocker</groupId>
-        <version>2.4.12</version>
-        <relativePath>../eblocker-top</relativePath>
+        <version>2.4.13</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -12,6 +11,13 @@
 
     <artifactId>eblocker-crypto</artifactId>
     <version>2.9.3</version>
+
+    <repositories>
+        <repository>
+            <id>eblocker-top</id>
+            <url>https://maven.pkg.github.com/eblocker/eblocker-top</url>
+        </repository>
+    </repositories>
 
     <dependencies>
 
