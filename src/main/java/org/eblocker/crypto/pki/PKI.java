@@ -245,22 +245,21 @@ public class PKI {
     }
 
     public static X509Certificate generateTLSServerCertificate(X509Certificate request, String orgName, String name, Date notValidAfter, CertificateAndKey l1ca) throws CryptoException {
-        return doGenerateSignedCertificate(request, orgName, name, notValidAfter, l1ca, KeyPurposeId.id_kp_serverAuth);
+        return doGenerateSignedCertificate(request, orgName, name, getStartDate(), notValidAfter, l1ca, KeyPurposeId.id_kp_serverAuth);
     }
 
     public static X509Certificate generateTLSClientCertificate(X509Certificate request, String orgName, String name, Date notValidAfter, CertificateAndKey l1ca) throws CryptoException {
-        return doGenerateSignedCertificate(request, orgName, name, notValidAfter, l1ca, KeyPurposeId.id_kp_clientAuth);
+        return doGenerateSignedCertificate(request, orgName, name, getStartDate(), notValidAfter, l1ca, KeyPurposeId.id_kp_clientAuth);
     }
 
-    public static X509Certificate generateSignedCertificate(X509Certificate request, String orgName, String name, Date notValidAfter, CertificateAndKey l1ca) throws CryptoException {
-        return doGenerateSignedCertificate(request, orgName, name, notValidAfter, l1ca);
+    public static X509Certificate generateSignedCertificate(X509Certificate request, String orgName, String name, Date startDate, Date notValidAfter, CertificateAndKey l1ca) throws CryptoException {
+        return doGenerateSignedCertificate(request, orgName, name, startDate, notValidAfter, l1ca);
     }
 
-    private static X509Certificate doGenerateSignedCertificate(X509Certificate request, String orgName, String name, Date notValidAfter, CertificateAndKey l1ca, KeyPurposeId...keyPurposeIds) throws CryptoException {
+    private static X509Certificate doGenerateSignedCertificate(X509Certificate request, String orgName, String name, Date startDate, Date notValidAfter, CertificateAndKey l1ca, KeyPurposeId...keyPurposeIds) throws CryptoException {
         PublicKey publicKey = request.getPublicKey();
         SubjectPublicKeyInfo authorityPublicKeyInfo = new SubjectPublicKeyInfo(ASN1Sequence.getInstance(l1ca.getCertificate().getPublicKey().getEncoded()));
         SubjectPublicKeyInfo subjectPublicKeyInfo = new SubjectPublicKeyInfo(ASN1Sequence.getInstance(publicKey.getEncoded()));
-        Date startDate = getStartDate();
         if (notValidAfter.after(l1ca.getCertificate().getNotAfter())) {
             notValidAfter = l1ca.getCertificate().getNotAfter();
         }
@@ -649,7 +648,7 @@ public class PKI {
         return i;
     }
 
-    private static Date getStartDate() {
+    public static Date getStartDate() {
         return new Date();
     }
 

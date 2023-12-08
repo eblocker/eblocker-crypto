@@ -288,7 +288,7 @@ public class PKITool {
         CertificateAndKey l1ca = loadKeyStore(in, alias);
 
         CertificateAndKey deviceCertificate = new CertificateAndKey(
-                pki.generateSignedCertificate(deviceRequest.getCertificate(), ORG_NAME, name, DateUtil.addYears(new Date(), validity), l1ca),
+                pki.generateSignedCertificate(deviceRequest.getCertificate(), ORG_NAME, name, PKI.getStartDate(), DateUtil.addYears(new Date(), validity), l1ca),
                 deviceRequest.getKey());
 
         // Store device key in keytore, protected with password; store certificate request in PEM file
