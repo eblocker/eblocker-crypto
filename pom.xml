@@ -118,4 +118,11 @@
         </profile>
     </profiles>
 
+    <distributionManagement>
+        <repository>
+            <id>eblocker-crypto</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/${githubRepository}</url>
+        </repository>
+    </distributionManagement>
 </project>
