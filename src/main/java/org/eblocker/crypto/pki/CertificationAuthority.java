@@ -32,21 +32,18 @@ public class CertificationAuthority {
 
     private final CertificateAndKey issuer;
 
-    private final String orgName;
-
     private final X509Certificate root;
 
-    CertificationAuthority(CertificateAndKey issuer, String orgName, X509Certificate root) {
+    CertificationAuthority(CertificateAndKey issuer, X509Certificate root) {
         this.issuer = issuer;
-        this.orgName = orgName;
         this.root = root;
         if (issuer == null ||issuer.getCertificate() == null ||issuer.getKey() == null) {
             throw new IllegalArgumentException("Cannot build CA without issuer key and certificate");
         }
     }
 
-    public X509Certificate issueCertificate(X509Certificate request, String name, Date notValidAfter) throws CryptoException {
-        return PKI.generateTLSClientCertificate(request, orgName, name, notValidAfter, issuer);
+    public X509Certificate issueCertificate(X509Certificate request, Date notValidAfter) throws CryptoException {
+        return PKI.generateTLSClientCertificate(request, notValidAfter, issuer);
     }
 
     public X509Certificate getIssuerCertificate() {

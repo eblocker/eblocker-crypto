@@ -163,7 +163,7 @@ public class PKITest {
         Date startDate = PKI.getStartDate();
         Date notValidAfter = DateUtil.addYears(startDate, validityYears);
 
-        X509Certificate deviceCertificate = PKI.generateSignedCertificate(deviceRequest.getCertificate(), ORGNAME, name, startDate, notValidAfter, l1ca);
+        X509Certificate deviceCertificate = PKI.generateSignedCertificate(deviceRequest.getCertificate(), startDate, notValidAfter, l1ca);
 
         assertNotNull(deviceCertificate);
 

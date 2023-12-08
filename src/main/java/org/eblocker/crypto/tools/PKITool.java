@@ -288,7 +288,7 @@ public class PKITool {
         CertificateAndKey l1ca = loadKeyStore(in, alias);
 
         CertificateAndKey deviceCertificate = new CertificateAndKey(
-                pki.generateSignedCertificate(deviceRequest.getCertificate(), ORG_NAME, name, PKI.getStartDate(), DateUtil.addYears(new Date(), validity), l1ca),
+                pki.generateSignedCertificate(deviceRequest.getCertificate(), PKI.getStartDate(), DateUtil.addYears(new Date(), validity), l1ca),
                 deviceRequest.getKey());
 
         // Store device key in keytore, protected with password; store certificate request in PEM file
@@ -305,7 +305,7 @@ public class PKITool {
         CertificateAndKey l1ca = loadKeyStore(in, alias);
 
         CertificateAndKey issuedCertificate = new CertificateAndKey(
-                pki.generateTLSServerCertificate(request.getCertificate(), ORG_NAME, name, DateUtil.addYears(new Date(), validity), l1ca),
+                pki.generateTLSServerCertificate(request.getCertificate(), DateUtil.addYears(new Date(), validity), l1ca),
                 request.getKey());
 
         CertificateAndKey rootca = loadKeyStore(root, rootAlias);
@@ -325,7 +325,7 @@ public class PKITool {
         CertificateAndKey l1ca = loadKeyStore(in, alias);
 
         CertificateAndKey issuedCertificate = new CertificateAndKey(
-                pki.generateTLSClientCertificate(request.getCertificate(), ORG_NAME, name, DateUtil.addYears(new Date(), validity), l1ca),
+                pki.generateTLSClientCertificate(request.getCertificate(), DateUtil.addYears(new Date(), validity), l1ca),
                 request.getKey());
 
         CertificateAndKey rootca = loadKeyStore(root, rootAlias);
