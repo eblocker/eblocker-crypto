@@ -43,7 +43,7 @@ public class CertificationAuthority {
     }
 
     public X509Certificate issueCertificate(X509Certificate request, Date notValidAfter) throws CryptoException {
-        return PKI.generateTLSClientCertificate(request, notValidAfter, issuer);
+        return PKI.generateTLSClientCertificate(request, PKI.getStartDate(), notValidAfter, issuer);
     }
 
     public X509Certificate getIssuerCertificate() {

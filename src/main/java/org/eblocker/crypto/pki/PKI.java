@@ -16,13 +16,6 @@
  */
 package org.eblocker.crypto.pki;
 
-import org.eblocker.crypto.CryptoException;
-import org.eblocker.crypto.CryptoService;
-import org.eblocker.crypto.CryptoServiceFactory;
-import org.eblocker.crypto.keys.KeyHandler;
-import org.eblocker.crypto.openssl.OpenSslRsaKeyPairGeneratorProvider;
-import org.eblocker.crypto.util.DateUtil;
-import org.eblocker.crypto.util.EncodingUtil;
 import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1Sequence;
@@ -32,30 +25,11 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
-import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
-import org.bouncycastle.asn1.x509.BasicConstraints;
-import org.bouncycastle.asn1.x509.CRLNumber;
-import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.Extension;
-import org.bouncycastle.asn1.x509.GeneralName;
-import org.bouncycastle.asn1.x509.GeneralNames;
-import org.bouncycastle.asn1.x509.GeneralNamesBuilder;
-import org.bouncycastle.asn1.x509.KeyPurposeId;
-import org.bouncycastle.asn1.x509.KeyUsage;
-import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.bouncycastle.cert.CertException;
-import org.bouncycastle.cert.CertIOException;
-import org.bouncycastle.cert.X509CRLHolder;
-import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.cert.X509v2CRLBuilder;
-import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.cert.*;
 import org.bouncycastle.cert.bc.BcX509ExtensionUtils;
-import org.bouncycastle.cert.jcajce.JcaX509CRLConverter;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
-import org.bouncycastle.cert.jcajce.JcaX509v2CRLBuilder;
-import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.*;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -69,47 +43,23 @@ import org.bouncycastle.operator.bc.BcRSAContentVerifierProviderBuilder;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
+import org.eblocker.crypto.CryptoException;
+import org.eblocker.crypto.CryptoService;
+import org.eblocker.crypto.CryptoServiceFactory;
+import org.eblocker.crypto.keys.KeyHandler;
+import org.eblocker.crypto.openssl.OpenSslRsaKeyPairGeneratorProvider;
+import org.eblocker.crypto.util.DateUtil;
+import org.eblocker.crypto.util.EncodingUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.Security;
-import java.security.cert.CRLException;
+import java.security.*;
 import java.security.cert.CRLReason;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.CertificateParsingException;
-import java.security.cert.X509CRL;
-import java.security.cert.X509CRLEntry;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.security.cert.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PKI {
@@ -244,12 +194,12 @@ public class PKI {
         return new CertificateAndKey(generateCertificate(builder, keyPair.getPrivate()), keyPair.getPrivate());
     }
 
-    public static X509Certificate generateTLSServerCertificate(X509Certificate request, Date notValidAfter, CertificateAndKey l1ca) throws CryptoException {
-        return doGenerateSignedCertificate(request, getStartDate(), notValidAfter, l1ca, KeyPurposeId.id_kp_serverAuth);
+    public static X509Certificate generateTLSServerCertificate(X509Certificate request, Date startDate, Date notValidAfter, CertificateAndKey l1ca) throws CryptoException {
+        return doGenerateSignedCertificate(request, startDate, notValidAfter, l1ca, KeyPurposeId.id_kp_serverAuth);
     }
 
-    public static X509Certificate generateTLSClientCertificate(X509Certificate request, Date notValidAfter, CertificateAndKey l1ca) throws CryptoException {
-        return doGenerateSignedCertificate(request, getStartDate(), notValidAfter, l1ca, KeyPurposeId.id_kp_clientAuth);
+    public static X509Certificate generateTLSClientCertificate(X509Certificate request, Date startDate, Date notValidAfter, CertificateAndKey l1ca) throws CryptoException {
+        return doGenerateSignedCertificate(request, startDate, notValidAfter, l1ca, KeyPurposeId.id_kp_clientAuth);
     }
 
     public static X509Certificate generateSignedCertificate(X509Certificate request, Date startDate, Date notValidAfter, CertificateAndKey l1ca) throws CryptoException {
