@@ -16,11 +16,11 @@
  */
 package org.eblocker.crypto.tools;
 
+import org.apache.commons.cli.*;
 import org.eblocker.crypto.CryptoException;
 import org.eblocker.crypto.pki.CertificateAndKey;
 import org.eblocker.crypto.pki.PKI;
 import org.eblocker.crypto.util.DateUtil;
-import org.apache.commons.cli.*;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -97,8 +97,6 @@ public class PKITool {
     private String alias;
     private String root;
     private String rootAlias;
-
-    private PKI pki;
 
     private char[] masterPassword = null;
 
@@ -225,13 +223,13 @@ public class PKITool {
     private void generateSystemKey() throws IOException, CryptoException {
         char[] systemKeyPassword = getSystemKeyPassword();
         BufferedWriter writer = getWriter(out+PASSWORD_EXT);
-        pki.generateSystemKey(writer, systemKeyPassword);
+        PKI.generateSystemKey(writer, systemKeyPassword);
         writer.close();
     }
 
     private void generateRoot() throws IOException, CryptoException {
         // Generate self signed root certificate
-        CertificateAndKey root = pki.generateRoot(ORG_NAME, name, validity, KEY_SIZE);
+        CertificateAndKey root = PKI.generateRoot(ORG_NAME, name, validity, KEY_SIZE);
 
         // Generate password and store it encrypted with system key
         char[] password = generateAndStorePassword(out);
@@ -247,7 +245,7 @@ public class PKITool {
         CertificateAndKey root = loadKeyStore(in, alias);
 
         // Generate L1CA certificate and key
-        CertificateAndKey l1ca = pki.generateL1CA(ORG_NAME, name, validity, KEY_SIZE, root);
+        CertificateAndKey l1ca = PKI.generateL1CA(ORG_NAME, name, validity, KEY_SIZE, root);
 
         // Generate password and store it encrypted with system key
         char[] password = generateAndStorePassword(out);
@@ -262,7 +260,7 @@ public class PKITool {
         // Generate password and store it encrypted with system key
         char[] password = generateAndStorePassword(out);
 
-        CertificateAndKey deviceRequest = pki.generateSelfSignedCertificateRequest(name, KEY_SIZE);
+        CertificateAndKey deviceRequest = PKI.generateSelfSignedCertificateRequest(name, KEY_SIZE);
 
         // Store device key in keytore, protected with password; store certificate request in PEM file
         generateAndStoreKeyStore(deviceRequest, name, password, out, "JKS");
@@ -274,7 +272,7 @@ public class PKITool {
         // Load root key and certificate
         CertificateAndKey root = loadKeyStore(in, alias);
 
-        X509CRL crl = pki.generateCrl(Collections.emptyList(), root, DateUtil.addYears(new Date(), validity));
+        X509CRL crl = PKI.generateCrl(Collections.emptyList(), root, DateUtil.addYears(new Date(), validity));
 
         // Store device key in keytore, protected with password; store certificate request in PEM file
         storeCrl(crl, out);
@@ -288,7 +286,7 @@ public class PKITool {
         CertificateAndKey l1ca = loadKeyStore(in, alias);
 
         CertificateAndKey deviceCertificate = new CertificateAndKey(
-                pki.generateSignedCertificate(deviceRequest.getCertificate(), ORG_NAME, name, DateUtil.addYears(new Date(), validity), l1ca),
+                PKI.generateSignedCertificate(deviceRequest.getCertificate(), PKI.getStartDate(), DateUtil.addYears(new Date(), validity), l1ca),
                 deviceRequest.getKey());
 
         // Store device key in keytore, protected with password; store certificate request in PEM file
@@ -300,12 +298,12 @@ public class PKITool {
         // Generate password and store it encrypted with system key
         char[] password = generateAndStorePassword(out);
 
-        CertificateAndKey request = pki.generateSelfSignedCertificateRequest(name, KEY_SIZE);
+        CertificateAndKey request = PKI.generateSelfSignedCertificateRequest(name, KEY_SIZE);
 
         CertificateAndKey l1ca = loadKeyStore(in, alias);
 
         CertificateAndKey issuedCertificate = new CertificateAndKey(
-                pki.generateTLSServerCertificate(request.getCertificate(), ORG_NAME, name, DateUtil.addYears(new Date(), validity), l1ca),
+                PKI.generateTLSServerCertificate(request.getCertificate(), PKI.getStartDate(), DateUtil.addYears(new Date(), validity), l1ca),
                 request.getKey());
 
         CertificateAndKey rootca = loadKeyStore(root, rootAlias);
@@ -320,12 +318,12 @@ public class PKITool {
         // Generate password and store it encrypted with system key
         char[] password = generateAndStorePassword(out);
 
-        CertificateAndKey request = pki.generateSelfSignedCertificateRequest(name, KEY_SIZE);
+        CertificateAndKey request = PKI.generateSelfSignedCertificateRequest(name, KEY_SIZE);
 
         CertificateAndKey l1ca = loadKeyStore(in, alias);
 
         CertificateAndKey issuedCertificate = new CertificateAndKey(
-                pki.generateTLSClientCertificate(request.getCertificate(), ORG_NAME, name, DateUtil.addYears(new Date(), validity), l1ca),
+                PKI.generateTLSClientCertificate(request.getCertificate(), PKI.getStartDate(), DateUtil.addYears(new Date(), validity), l1ca),
                 request.getKey());
 
         CertificateAndKey rootca = loadKeyStore(root, rootAlias);
@@ -340,7 +338,7 @@ public class PKITool {
         char[] systemKeyPassword = getSystemKeyPassword();
         BufferedReader systemKeyReader = getReader(systemKey + PASSWORD_EXT);
         BufferedWriter passwordWriter = getWriter(out + PASSWORD_EXT);
-        char[] password = pki.generatePassword(systemKeyReader, systemKeyPassword, passwordWriter);
+        char[] password = PKI.generatePassword(systemKeyReader, systemKeyPassword, passwordWriter);
         passwordWriter.close();
         systemKeyReader.close();
         return password;
@@ -350,7 +348,7 @@ public class PKITool {
         char[] systemKeyPassword = getSystemKeyPassword();
         BufferedReader reader = getReader(in+PASSWORD_EXT);
         BufferedReader systemKeyReader = getReader(systemKey + PASSWORD_EXT);
-        char[] password = pki.readPassword(systemKeyReader, systemKeyPassword, reader);
+        char[] password = PKI.readPassword(systemKeyReader, systemKeyPassword, reader);
         reader.close();
         return password;
     }
@@ -358,7 +356,7 @@ public class PKITool {
     private void generateAndStoreKeyStore(CertificateAndKey certificateAndKey, String name, char[] password, String out, String keyStoreType, X509Certificate...chain) throws IOException, CryptoException {
         OutputStream os = getOutputStream(out + (keyStoreType.equals("PKCS12") ? PKCS12_EXT : KEYSTORE_EXT));
         System.out.println("Creating keyStore with password '"+new String(password)+"'");
-        pki.generateKeyStore(certificateAndKey, name, password, os, keyStoreType, chain);
+        PKI.generateKeyStore(certificateAndKey, name, password, os, keyStoreType, chain);
         os.close();
     }
 
@@ -368,7 +366,7 @@ public class PKITool {
 
         // Load key and certificate
         InputStream is = getInputStream(in+KEYSTORE_EXT);
-        CertificateAndKey certificateAndKey = pki.loadKeyStore(alias, is, password);
+        CertificateAndKey certificateAndKey = PKI.loadKeyStore(alias, is, password);
         is.close();
 
         return certificateAndKey;
@@ -376,19 +374,19 @@ public class PKITool {
 
     private void storeCertificate(CertificateAndKey certificateAndKey, String out) throws IOException, CryptoException {
         OutputStream os = getOutputStream(out + CERTIFICATE_EXT);
-        pki.storeCertificate(certificateAndKey.getCertificate(), os);
+        PKI.storeCertificate(certificateAndKey.getCertificate(), os);
         os.close();
     }
 
     private void storeKey(CertificateAndKey certificateAndKey, String out) throws IOException, CryptoException {
         OutputStream os = getOutputStream(out + KEY_EXT);
-        pki.storePrivateKey(certificateAndKey.getKey(), os);
+        PKI.storePrivateKey(certificateAndKey.getKey(), os);
         os.close();
     }
 
     private void storeCrl(X509CRL crl, String out) throws IOException, CryptoException {
         OutputStream os = getOutputStream(out + CRL_EXT);
-        pki.storeCrl(crl, os);
+        PKI.storeCrl(crl, os);
         os.close();
     }
 

@@ -32,8 +32,6 @@ public class CertificationAuthorityBuilder {
         return new CertificationAuthorityBuilder();
     }
 
-    private String orgName;
-
     private char[] systemKeyPassword;
 
     private String systemKeyResource;
@@ -43,11 +41,6 @@ public class CertificationAuthorityBuilder {
     private String rootCertificateResource;
 
     private CertificationAuthorityBuilder() {
-    }
-
-    public CertificationAuthorityBuilder setOrgName(String orgName) {
-        this.orgName = orgName;
-        return this;
     }
 
     public CertificationAuthorityBuilder setIssuerAlias(String issuerAlias) {
@@ -81,7 +74,7 @@ public class CertificationAuthorityBuilder {
     }
 
     public CertificationAuthority build() throws IOException, CryptoException {
-        return new CertificationAuthority(loadIssuerKeyStore(), orgName, loadRootCertificate());
+        return new CertificationAuthority(loadIssuerKeyStore(), loadRootCertificate());
     }
 
     private X509Certificate loadRootCertificate() throws IOException, CryptoException {

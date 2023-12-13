@@ -33,8 +33,6 @@ import static org.junit.Assert.*;
 
 public class CertificationAuthorityClassPathTest {
 
-    private static final String ORG_NAME = "eBlocker GmbH";
-
     private static final String ISSUER_NAME = "eBlocker Device CA I";
     private static final String ISSUER_ALIAS = ISSUER_NAME;
 
@@ -47,10 +45,6 @@ public class CertificationAuthorityClassPathTest {
     private String issuerKeyPasswordPath = "classpath:l1ca.properties";
     private String issuerKeyStorePath = "classpath:l1ca.jks";
     private String rootCertificatePath = "classpath:root.crt";
-
-    @Before
-    public void init() throws IOException, CryptoException {
-    }
 
     @After
     public void finish() {
@@ -67,7 +61,6 @@ public class CertificationAuthorityClassPathTest {
         CertificateAndKey request = PKI.generateSelfSignedCertificateRequest("My Device", KEY_SIZE);
 
         CertificationAuthority ca = CertificationAuthorityBuilder.create().
-                setOrgName(ORG_NAME).
                 setIssuerAlias(ISSUER_ALIAS).
                 setSystemKeyResource(systemKeyPath).
                 setSystemKeyPassword(getSystemKeyPassword()).
@@ -79,7 +72,7 @@ public class CertificationAuthorityClassPathTest {
         assertNotNull(ca);
 
         Date notValidAfter = DateUtil.addYears(new Date(), 1);
-        X509Certificate deviceCertificate = ca.issueCertificate(request.getCertificate(), "My Device", notValidAfter);
+        X509Certificate deviceCertificate = ca.issueCertificate(request.getCertificate(), notValidAfter);
 
         assertNotNull(deviceCertificate);
         assertTrue(PKI.verifyCertificateSignature(deviceCertificate, ca.getIssuerCertificate()));

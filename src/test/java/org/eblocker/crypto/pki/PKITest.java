@@ -160,18 +160,17 @@ public class PKITest {
         String name = "Device 1";
         int validityYears = 1;
         CertificateAndKey deviceRequest = PKI.generateSelfSignedCertificateRequest(name, KEYSIZE);
-        Date notValidAfter = DateUtil.addYears(new Date(), validityYears);
+        Date startDate = PKI.getStartDate();
+        Date notValidAfter = DateUtil.addYears(startDate, validityYears);
 
-        Date t1 = new Date();
-        X509Certificate deviceCertificate = PKI.generateSignedCertificate(deviceRequest.getCertificate(), ORGNAME, name, notValidAfter, l1ca);
-        Date t2 = new Date();
+        X509Certificate deviceCertificate = PKI.generateSignedCertificate(deviceRequest.getCertificate(), startDate, notValidAfter, l1ca);
 
         assertNotNull(deviceCertificate);
 
         Date notBefore = deviceCertificate.getNotBefore();
         Date notAfter = deviceCertificate.getNotAfter();
-        assertFalse(DateUtil.stripMillis(t1, 0).after(notBefore));
-        assertFalse(DateUtil.stripMillis(t2, 1).before(notBefore));
+        assertFalse(DateUtil.stripMillis(startDate, 0).after(notBefore));
+        assertFalse(DateUtil.stripMillis(startDate, 1).before(notBefore));
         assertEquals(DateUtil.addYears(notBefore, validityYears), notAfter);
     }
 

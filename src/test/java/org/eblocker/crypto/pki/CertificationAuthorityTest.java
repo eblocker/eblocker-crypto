@@ -86,7 +86,6 @@ public class CertificationAuthorityTest {
         CertificateAndKey request = PKI.generateSelfSignedCertificateRequest("My Device", KEY_SIZE);
 
         CertificationAuthority ca = CertificationAuthorityBuilder.create().
-                setOrgName(ORG_NAME).
                 setIssuerAlias(ISSUER_ALIAS).
                 setSystemKeyResource(systemKeyPath.toString()).
                 setSystemKeyPassword(getSystemKeyPassword()).
@@ -98,7 +97,7 @@ public class CertificationAuthorityTest {
         assertNotNull(ca);
 
         Date notValidAfter = DateUtil.addYears(new Date(), 1);
-        X509Certificate deviceCertificate = ca.issueCertificate(request.getCertificate(), "My Device", notValidAfter);
+        X509Certificate deviceCertificate = ca.issueCertificate(request.getCertificate(),  notValidAfter);
 
         assertNotNull(deviceCertificate);
         assertTrue(PKI.verifyCertificateSignature(deviceCertificate, ca.getIssuerCertificate()));
