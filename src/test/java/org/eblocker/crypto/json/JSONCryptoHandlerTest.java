@@ -16,12 +16,11 @@
  */
 package org.eblocker.crypto.json;
 
-import org.eblocker.crypto.*;
-import org.eblocker.crypto.keys.SystemKey;
 import org.eblocker.crypto.CryptoException;
 import org.eblocker.crypto.CryptoService;
 import org.eblocker.crypto.CryptoServiceFactory;
-import org.junit.Test;
+import org.eblocker.crypto.keys.SystemKey;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,12 +31,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class JSONCryptoHandlerTest {
+class JSONCryptoHandlerTest {
 
     @Test
-    public void test() throws IOException, CryptoException {
+    void test() throws IOException, CryptoException {
         Path tmp = Files.createTempFile("encrypted.", ".data");
         if (Files.exists(tmp)) {
             Files.delete(tmp);
@@ -50,7 +49,7 @@ public class JSONCryptoHandlerTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         JSONCryptoHandler.encrypt(entity, cryptoService, out);
 
-        System.out.println(new String(out.toByteArray()));
+        System.out.println(out.toString());
 
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
         TestEntity entity2 = JSONCryptoHandler.decrypt(TestEntity.class, cryptoService, in);
@@ -62,7 +61,7 @@ public class JSONCryptoHandlerTest {
     }
 
     @Test
-    public void testConstructorIsPrivate() throws Exception {
+    void testConstructorIsPrivate() throws Exception {
         Constructor<JSONCryptoHandler> constructor = JSONCryptoHandler.class.getDeclaredConstructor();
         assertTrue(Modifier.isPrivate(constructor.getModifiers()));
         constructor.setAccessible(true);
